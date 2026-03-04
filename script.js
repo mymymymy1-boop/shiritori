@@ -11,19 +11,24 @@ const Engine = Matter.Engine,
 
 let engine, render, runner, world;
 let shiritoriData = [];
+let targetWord = null;
 let targetKana = '？';
 let score = 0;
+let isAnimating = false; // 〇×アニメーション中はタップ無効化
 
 // キャンバス設定
 const canvas = document.getElementById('game-canvas');
 
 // DOM 要素
-const currentKanaEl = document.getElementById('current-kana');
+const targetImageEl = document.getElementById('target-image');
+const targetNameEl = document.getElementById('target-name');
+const targetKanaHintEl = document.getElementById('target-kana-hint');
 const scoreEl = document.getElementById('score-value');
 const startScreen = document.getElementById('start-screen');
 const startBtn = document.getElementById('start-btn');
-const messageOverlay = document.getElementById('message-overlay');
-const messageBox = document.getElementById('message-box');
+const feedbackOverlay = document.getElementById('feedback-overlay');
+const feedbackMark = document.getElementById('feedback-mark');
+const feedbackText = document.getElementById('feedback-text');
 
 // 音声合成
 const synth = window.speechSynthesis;
@@ -54,11 +59,90 @@ function speakWord(text) {
     synth.speak(utterThis);
 }
 
+// ====== クイズ進行管理 ======
+function setTargetWord(wordData) {
+    targetWord = wordData;
+    targetKana = getLastKana(wordData.reading);
+
+    targetNameEl.textContent = wordData.name;
+
+    // 画像がある場合は表示、ない場合は非表示（この後Pythonで生成するまで）
+    if (wordData.image) {
+        targetImageEl.src = `img/${wordData.image}`;
+        targetImageEl.style.display = 'block';
+        targetNameEl.style.fontSize = '24px';
+    } else {
+        targetImageEl.style.display = 'none';
+        targetNameEl.style.fontSize = '40px';
+    }
+
+    targetKanaHintEl.textContent = targetKana;
+}
+
+function showFeedback(isCorrect, tappedWordData, physicsBody) {
+    isAnimating = true;
+
+    feedbackMark.textContent = isCorrect ? '〇' : '×';
+    feedbackMark.className = isCorrect ? 'correct' : 'incorrect';
+    feedbackText.textContent = tappedWordData.reading;
+
+    feedbackOverlay.classList.remove('hidden');
+    feedbackOverlay.classList.add('anim-pop');
+
+    if (isCorrect) {
+        speakWord("せいかい！" + tappedWordData.name);
+        fireConfetti();
+        score++;
+        scoreEl.textContent = score;
+    } else {
+        speakWord("ぶっぶー！" + tappedWordData.name);
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 500);
+
+        // 不正解の場合は減点
+        score = Math.max(0, score - 1);
+        scoreEl.textContent = score;
+    }
+
+    // アニメーション終了時の処理 (1.5秒後)
+    setTimeout(() => {
+        feedbackOverlay.classList.add('hidden');
+        feedbackOverlay.classList.remove('anim-pop');
+
+        if (isCorrect) {
+            // 正解したカードを消して、それをお題にする
+            Composite.remove(world, physicsBody);
+            setTargetWord(tappedWordData);
+
+            // 新しい正解候補とダミーを少し降らせる
+            spawnNextHintCard(getLastKana(tappedWordData.reading));
+            fillCards(2);
+        } else {
+            // 不正解のカードは上に弾き飛ばす
+            Matter.Body.applyForce(physicsBody, physicsBody.position, {
+                x: (Math.random() - 0.5) * 0.5,
+                y: -1.0
+            });
+        }
+
+        isAnimating = false;
+    }, 1500);
+}
+
+function fireConfetti() {
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FF7B9C', '#60D394', '#FFD166']
+    });
+}
+
 // ====== Matter.js 初期化 ======
 function initPhysics() {
     engine = Engine.create();
     world = engine.world;
-    engine.world.gravity.y = 0.3; // ふわふわ落ちるアンチグラビティ風
+    engine.world.gravity.y = 0.2; // 少しゆっくり落ちる設定
 
     render = Render.create({
         canvas: canvas,
@@ -103,29 +187,41 @@ function initPhysics() {
 
     Events.on(mouseConstraint, 'mousedown', (event) => {
         const body = mouseConstraint.body;
-        if (body && body.wordData) {
+        if (body && body.wordData && !isAnimating) {
             mousedownPosition = { x: mouse.position.x, y: mouse.position.y };
             mousedownTime = new Date().getTime();
         }
     });
 
     Events.on(mouseConstraint, 'mouseup', (event) => {
+        // Matter.jsのmouseupイベント内で、mousedown時に取得したボディ情報を使う
         const body = mouseConstraint.body;
-        if (body && body.wordData && mousedownPosition) {
+
+        // 直近クリックされたbodyがない場合でも、mouseup位置からbodyを探すフォールバック対応
+        let targetBody = body;
+        if (!targetBody && mousedownPosition) {
+            const bodies = Composite.allBodies(world).filter(b => b.wordData);
+            const clickedBodies = Matter.Query.point(bodies, mouse.position);
+            if (clickedBodies.length > 0) {
+                targetBody = clickedBodies[0];
+            }
+        }
+
+        if (targetBody && targetBody.wordData && mousedownPosition && !isAnimating) {
             const dx = mouse.position.x - mousedownPosition.x;
             const dy = mouse.position.y - mousedownPosition.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             const timeDiff = new Date().getTime() - mousedownTime;
 
-            // タップ判定
-            if (distance < 20 && timeDiff < 500) {
-                handleCardTap(body);
+            // マウスでのドラッグ(投げる)ではなく「クリック/タップ」とみなす判定（少し緩めに設定）
+            if (distance < 50 && timeDiff < 1000) {
+                handleCardTap(targetBody);
             }
         }
         mousedownPosition = null;
     });
 
-    // カスタム描画
+    // カスタム描画 (カードの見た目。画像があれば画像、なければ文字)
     Events.on(render, 'afterRender', () => {
         const context = render.context;
         const bodies = Composite.allBodies(world);
@@ -141,21 +237,26 @@ function initPhysics() {
                 context.translate(x, y);
                 context.rotate(angle);
 
-                context.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                context.shadowColor = 'rgba(0, 0, 0, 0.15)';
+                // カードの背景（白ベース）
+                context.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                context.shadowColor = 'rgba(0, 0, 0, 0.2)';
                 context.shadowBlur = 15;
                 context.shadowOffsetY = 8;
 
+                // 角丸四角形じゃなく円ベースでいきます（可愛いので）
                 context.beginPath();
                 context.arc(0, 0, size / 2, 0, 2 * Math.PI);
                 context.fill();
 
                 context.shadowColor = 'transparent';
 
+                // トラップ（ん）は赤い枠線
                 context.lineWidth = 4;
-                context.strokeStyle = word.is_trap ? '#ff4757' : '#7bed9f';
+                context.strokeStyle = word.is_trap ? '#ff4757' : '#60D394';
                 context.stroke();
 
+                // 画像がある場（現状は文字描画を優先、画像読み込みロジックは今後追加可）
+                // 今はダミーでテキスト表示
                 context.fillStyle = '#2D3142';
                 context.textAlign = 'center';
                 context.textBaseline = 'middle';
@@ -175,7 +276,8 @@ function initPhysics() {
 }
 
 function spawnCard(x, y, data) {
-    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.12;
+    // 画面サイズに応じてカードの大きさを調整
+    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.15;
     const card = Bodies.circle(x, y, radius, {
         restitution: 0.6,
         friction: 0.1,
@@ -191,86 +293,39 @@ function fillCards(count) {
     const w = window.innerWidth;
     for (let i = 0; i < count; i++) {
         const randomWord = shiritoriData[Math.floor(Math.random() * shiritoriData.length)];
+        // 上から降ってくるようにマイナスのY座標に配置
         const x = w * 0.1 + Math.random() * w * 0.8;
         const y = -100 - Math.random() * 500;
         spawnCard(x, y, randomWord);
     }
 }
 
-function showMessage(text, isError) {
-    messageBox.textContent = text;
-    messageBox.style.background = isError ? 'rgba(255, 75, 75, 0.95)' : 'rgba(96, 211, 148, 0.95)';
-    messageOverlay.classList.remove('hidden');
-
-    if (isError) {
-        document.body.classList.add('shake');
-        setTimeout(() => document.body.classList.remove('shake'), 500);
-    }
-
-    setTimeout(() => {
-        messageOverlay.classList.add('hidden');
-    }, 2000);
-}
-
-function fireConfetti() {
-    confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#FF7B9C', '#60D394', '#FFD166']
-    });
-}
-
-function handleCardTap(body) {
-    const word = body.wordData;
-    speakWord(word.name);
-
-    if (word.is_trap && getLastKana(word.reading) === 'ん') {
-        showMessage('「ん」がついたよ！どかん！💣', true);
-        setTimeout(() => speakWord('ん、がついたから、やりなおし！'), 1000);
-        score = Math.max(0, score - 1);
-        scoreEl.textContent = score;
-
-        Composite.remove(world, body);
-        fillCards(1);
-        return;
-    }
-
-    const firstKana = getFirstKana(word.reading);
-    const lastKana = getLastKana(word.reading);
-
-    if (targetKana === '？' || targetKana === firstKana) {
-        if (targetKana !== '？') {
-            fireConfetti();
-        }
-
-        targetKana = lastKana;
-        currentKanaEl.textContent = targetKana;
-        score++;
-        scoreEl.textContent = score;
-
-        Composite.remove(world, body);
-
-        spawnNextHintCard(lastKana);
-        fillCards(2);
-
-    } else {
-        showMessage('ちがうよ！「' + targetKana + '」から探してね！', true);
-        setTimeout(() => speakWord('ぶっぶー！'), 800);
-
-        Matter.Body.applyForce(body, body.position, {
-            x: (Math.random() - 0.5) * 0.5,
-            y: -0.5
-        });
-    }
-}
-
 function spawnNextHintCard(startingKana) {
+    // 次に正解となる候補を確実に出現させる
     const hints = shiritoriData.filter(w => getFirstKana(w.reading) === startingKana && getLastKana(w.reading) !== 'ん');
     if (hints.length > 0) {
         const hintWord = hints[Math.floor(Math.random() * hints.length)];
         const x = window.innerWidth * 0.2 + Math.random() * window.innerWidth * 0.6;
         spawnCard(x, -200, hintWord);
+    }
+}
+
+function handleCardTap(body) {
+    const word = body.wordData;
+
+    // ん で終わるトラップの場合は不正解扱い
+    if (word.is_trap && getLastKana(word.reading) === 'ん') {
+        showFeedback(false, word, body);
+        return;
+    }
+
+    const firstKana = getFirstKana(word.reading);
+
+    // 正解判定
+    if (targetKana === firstKana) {
+        showFeedback(true, word, body);
+    } else {
+        showFeedback(false, word, body);
     }
 }
 
@@ -280,8 +335,10 @@ async function loadDataAndStart() {
         shiritoriData = await response.json();
     } catch (e) {
         console.error("データの読み込みに失敗しました", e);
+        // フォールバックデータ
         shiritoriData = [
             { "id": 1, "name": "あり", "reading": "あり", "category": "昆虫", "season": "春", "is_trap": false },
+            { "id": 2, "name": "りす", "reading": "りす", "category": "動物", "season": "通年", "is_trap": false },
             { "id": 10, "name": "みかん", "reading": "みかん", "category": "果物", "season": "冬", "is_trap": true }
         ];
     }
@@ -289,11 +346,21 @@ async function loadDataAndStart() {
 }
 
 startBtn.addEventListener('click', () => {
-    speakWord("しりとり、スタート！");
+    // 最初の音声を再生（iOS等での音声許可）
+    speakWord("しりとりクイズ、スタート！");
     startScreen.style.opacity = '0';
+
     setTimeout(() => {
         startScreen.style.display = 'none';
-        fillCards(12);
+
+        // 最初のランダムなお題を設定
+        const initialWord = shiritoriData.find(w => getLastKana(w.reading) !== 'ん');
+        setTargetWord(initialWord || shiritoriData[0]);
+
+        // 正解のカードを含めて初期カードを降らせる
+        spawnNextHintCard(getLastKana(initialWord.reading));
+        fillCards(6); // 最初は6個降らせる
+
     }, 500);
 });
 
