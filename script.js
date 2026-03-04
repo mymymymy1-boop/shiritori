@@ -301,8 +301,25 @@ function fillCards(count) {
 }
 
 function spawnNextHintCard(startingKana) {
-    // 次に正解となる候補を確実に出現させる
-    const hints = shiritoriData.filter(w => getFirstKana(w.reading) === startingKana && getLastKana(w.reading) !== 'ん');
+    // 次に正解となる候補を探す
+    let hints = shiritoriData.filter(w => getFirstKana(w.reading) === startingKana && getLastKana(w.reading) !== 'ん');
+
+    // もし手持ちのデータに続く言葉がない場合（行き止まり）
+    if (hints.length === 0) {
+        console.log("行き止まり！新しいお題に切り替えます。");
+        // ん で終わらないランダムな単語を新しくお題にする
+        const validWords = shiritoriData.filter(w => getLastKana(w.reading) !== 'ん');
+        const newWord = validWords[Math.floor(Math.random() * validWords.length)];
+
+        // 強制的にお題を切り替える
+        setTargetWord(newWord);
+        speakWord("つづく言葉がなくなったから、あたらしいお題にするね！" + newWord.name);
+
+        // 新しいお題の続く言葉を再検索
+        hints = shiritoriData.filter(w => getFirstKana(w.reading) === getLastKana(newWord.reading) && getLastKana(w.reading) !== 'ん');
+    }
+
+    // ヒントカードを降らせる
     if (hints.length > 0) {
         const hintWord = hints[Math.floor(Math.random() * hints.length)];
         const x = window.innerWidth * 0.2 + Math.random() * window.innerWidth * 0.6;
