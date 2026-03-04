@@ -182,40 +182,35 @@ function initPhysics() {
     World.add(world, mouseConstraint);
     render.mouse = mouse;
 
-    let mousedownPosition = null;
-    let mousedownTime = 0;
+    // 独自のクリック処理の実装（MouseConstraintの誤動作を完全に防ぐ）
+    const getClickedBody = (x, y) => {
+        const bodies = Composite.allBodies(world).filter(b => b.wordData);
+        const clickedBodies = Matter.Query.point(bodies, { x, y });
+        return clickedBodies.length > 0 ? clickedBodies[0] : null;
+    };
 
-    Events.on(mouseConstraint, 'mousedown', (event) => {
-        const body = mouseConstraint.body;
-        if (body && body.wordData && !isAnimating) {
-            mousedownPosition = { x: mouse.position.x, y: mouse.position.y };
-            mousedownTime = new Date().getTime();
-        }
+    // スマホのタップとPCのクリック両方に対応
+    canvas.addEventListener('pointerdown', (e) => {
+        if (isAnimating) return;
+        mousedownPosition = { x: e.clientX, y: e.clientY };
+        mousedownTime = new Date().getTime();
     });
 
-    Events.on(mouseConstraint, 'mouseup', (event) => {
-        // Matter.jsのmouseupイベント内で、mousedown時に取得したボディ情報を使う
-        const body = mouseConstraint.body;
+    canvas.addEventListener('pointerup', (e) => {
+        if (isAnimating || !mousedownPosition) return;
 
-        // 直近クリックされたbodyがない場合でも、mouseup位置からbodyを探すフォールバック対応
-        let targetBody = body;
-        if (!targetBody && mousedownPosition) {
-            const bodies = Composite.allBodies(world).filter(b => b.wordData);
-            const clickedBodies = Matter.Query.point(bodies, mouse.position);
-            if (clickedBodies.length > 0) {
-                targetBody = clickedBodies[0];
-            }
-        }
+        const x = e.clientX;
+        const y = e.clientY;
+        const dx = x - mousedownPosition.x;
+        const dy = y - mousedownPosition.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const timeDiff = new Date().getTime() - mousedownTime;
 
-        if (targetBody && targetBody.wordData && mousedownPosition && !isAnimating) {
-            const dx = mouse.position.x - mousedownPosition.x;
-            const dy = mouse.position.y - mousedownPosition.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const timeDiff = new Date().getTime() - mousedownTime;
-
-            // マウスでのドラッグ(投げる)ではなく「クリック/タップ」とみなす判定（少し緩めに設定）
-            if (distance < 50 && timeDiff < 1000) {
-                handleCardTap(targetBody);
+        // ドラッグではなく「クリック」とみなす
+        if (distance < 30 && timeDiff < 1000) {
+            const body = getClickedBody(x, y);
+            if (body) {
+                handleCardTap(body);
             }
         }
         mousedownPosition = null;
