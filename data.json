@@ -1,0 +1,482 @@
+[
+    {
+        "id": 1,
+        "name": "あり",
+        "reading": "あり",
+        "category": "昆虫",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 2,
+        "name": "りす",
+        "reading": "りす",
+        "category": "動物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 3,
+        "name": "すみれ",
+        "reading": "すみれ",
+        "category": "花",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 4,
+        "name": "れんげ",
+        "reading": "れんげ",
+        "category": "花",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 5,
+        "name": "げんげばな",
+        "reading": "げんげばな",
+        "category": "花",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 6,
+        "name": "なのはな",
+        "reading": "なのはな",
+        "category": "花",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 7,
+        "name": "なす",
+        "reading": "なす",
+        "category": "野菜",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 8,
+        "name": "つくし",
+        "reading": "つくし",
+        "category": "植物",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 9,
+        "name": "しろうさぎ",
+        "reading": "しろうさぎ",
+        "category": "動物",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 10,
+        "name": "ぎんなん",
+        "reading": "ぎんなん",
+        "category": "実",
+        "season": "秋",
+        "is_trap": true
+    },
+    {
+        "id": 11,
+        "name": "あさがお",
+        "reading": "あさがお",
+        "category": "花",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 12,
+        "name": "おたまじゃくし",
+        "reading": "おたまじゃくし",
+        "category": "生き物",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 13,
+        "name": "しか",
+        "reading": "しか",
+        "category": "動物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 14,
+        "name": "かぶとむし",
+        "reading": "かぶとむし",
+        "category": "昆虫",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 15,
+        "name": "しおからとんぼ",
+        "reading": "しおからとんぼ",
+        "category": "昆虫",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 16,
+        "name": "ぼたん",
+        "reading": "ぼたん",
+        "category": "花",
+        "season": "春",
+        "is_trap": true
+    },
+    {
+        "id": 17,
+        "name": "ひまわり",
+        "reading": "ひまわり",
+        "category": "花",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 18,
+        "name": "りんどう",
+        "reading": "りんどう",
+        "category": "花",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 19,
+        "name": "うみわらび",
+        "reading": "うみわらび",
+        "category": "植物",
+        "season": "海",
+        "is_trap": false
+    },
+    {
+        "id": 20,
+        "name": "びわ",
+        "reading": "びわ",
+        "category": "果物",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 21,
+        "name": "くり",
+        "reading": "くり",
+        "category": "実",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 22,
+        "name": "りんご",
+        "reading": "りんご",
+        "category": "果物",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 23,
+        "name": "すすき",
+        "reading": "すすき",
+        "category": "植物",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 24,
+        "name": "きく",
+        "reading": "きく",
+        "category": "花",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 25,
+        "name": "くるみ",
+        "reading": "くるみ",
+        "category": "実",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 26,
+        "name": "みかん",
+        "reading": "みかん",
+        "category": "果物",
+        "season": "冬",
+        "is_trap": true
+    },
+    {
+        "id": 27,
+        "name": "かき",
+        "reading": "かき",
+        "category": "果物",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 28,
+        "name": "きんぎょ",
+        "reading": "きんぎょ",
+        "category": "生き物",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 29,
+        "name": "よるがお",
+        "reading": "よるがお",
+        "category": "花",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 30,
+        "name": "おおばこ",
+        "reading": "おおばこ",
+        "category": "植物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 31,
+        "name": "ろうと",
+        "reading": "ろうと",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 32,
+        "name": "とけい",
+        "reading": "とけい",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 33,
+        "name": "いとぐるま",
+        "reading": "いとぐるま",
+        "category": "昔の道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 34,
+        "name": "まり",
+        "reading": "まり",
+        "category": "遊び",
+        "season": "お正月",
+        "is_trap": false
+    },
+    {
+        "id": 35,
+        "name": "りぼん",
+        "reading": "りぼん",
+        "category": "装飾",
+        "season": "通年",
+        "is_trap": true
+    },
+    {
+        "id": 36,
+        "name": "はさみ",
+        "reading": "はさみ",
+        "category": "文房具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 37,
+        "name": "みしん",
+        "reading": "みしん",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": true
+    },
+    {
+        "id": 38,
+        "name": "ふで",
+        "reading": "ふで",
+        "category": "文房具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 39,
+        "name": "でんわ",
+        "reading": "でんわ",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 40,
+        "name": "わなげ",
+        "reading": "わなげ",
+        "category": "遊び",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 41,
+        "name": "じざいかぎ",
+        "reading": "じざいかぎ",
+        "category": "昔の道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 42,
+        "name": "れんこん",
+        "reading": "れんこん",
+        "category": "野菜",
+        "season": "冬",
+        "is_trap": true
+    },
+    {
+        "id": 43,
+        "name": "おくら",
+        "reading": "おくら",
+        "category": "野菜",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 44,
+        "name": "らっぱ",
+        "reading": "らっぱ",
+        "category": "楽器",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 45,
+        "name": "ぱんだ",
+        "reading": "ぱんだ",
+        "category": "動物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 46,
+        "name": "だるま",
+        "reading": "だるま",
+        "category": "遊び",
+        "season": "お正月",
+        "is_trap": false
+    },
+    {
+        "id": 47,
+        "name": "まいく",
+        "reading": "まいく",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 48,
+        "name": "くわがた",
+        "reading": "くわがた",
+        "category": "昆虫",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 49,
+        "name": "たこ",
+        "reading": "たこ",
+        "category": "海の生き物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 50,
+        "name": "こま",
+        "reading": "こま",
+        "category": "遊び",
+        "season": "お正月",
+        "is_trap": false
+    },
+    {
+        "id": 51,
+        "name": "まつぼっくり",
+        "reading": "まつぼっくり",
+        "category": "実",
+        "season": "秋",
+        "is_trap": false
+    },
+    {
+        "id": 52,
+        "name": "りょうてなべ",
+        "reading": "りょうてなべ",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 53,
+        "name": "べこ",
+        "reading": "べこ",
+        "category": "動物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 54,
+        "name": "こんろ",
+        "reading": "こんろ",
+        "category": "道具",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 55,
+        "name": "ろば",
+        "reading": "ろば",
+        "category": "動物",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 56,
+        "name": "ばった",
+        "reading": "ばった",
+        "category": "昆虫",
+        "season": "夏",
+        "is_trap": false
+    },
+    {
+        "id": 57,
+        "name": "たいこ",
+        "reading": "たいこ",
+        "category": "楽器",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 58,
+        "name": "こいのぼり",
+        "reading": "こいのぼり",
+        "category": "行事",
+        "season": "春",
+        "is_trap": false
+    },
+    {
+        "id": 59,
+        "name": "りずむ",
+        "reading": "りずむ",
+        "category": "音楽",
+        "season": "通年",
+        "is_trap": false
+    },
+    {
+        "id": 60,
+        "name": "むぎわらぼうし",
+        "reading": "むぎわらぼうし",
+        "category": "日用品",
+        "season": "夏",
+        "is_trap": false
+    }
+]

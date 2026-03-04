@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>お受験しりとりアンチグラビティ</title>
+    <!-- 幼児向けの美しく親しみやすいフォント -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Matter.js の読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+    <!-- UI レイヤー -->
+    <div id="ui-layer">
+        <div class="header-container">
+            <h1 class="logo">しりとり アンチグラビティ🚀</h1>
+            <div id="status-board">
+                <div class="status-label">つぎの文字は…</div>
+                <div id="current-kana" class="target-kana">？</div>
+            </div>
+            <div id="score-board">スコア: <span id="score-value">0</span></div>
+        </div>
+        
+        <!-- エラー・トラップメッセージ表示用 -->
+        <div id="message-overlay" class="hidden">
+            <div id="message-box"></div>
+        </div>
+
+        <!-- 開始ボタン -->
+        <div id="start-screen">
+            <div class="start-modal">
+                <h2>お受験しりとり<br>アンチグラビティ</h2>
+                <p>文字をタッチしてね！<br>「ん」がついたらドカンだよ💣</p>
+                <button id="start-btn">スタート！</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 物理描画キャンバス -->
+    <canvas id="game-canvas"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
