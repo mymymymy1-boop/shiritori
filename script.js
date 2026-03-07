@@ -66,13 +66,21 @@ function setTargetWord(wordData) {
 
     targetNameEl.textContent = wordData.name;
 
-    // 画像がある場合は表示、ない場合は非表示（この後Pythonで生成するまで）
+    // お題画像のキャッシュ対策
     if (wordData.image) {
-        targetImageEl.src = `img/${wordData.image}`;
-        targetImageEl.style.display = 'block';
-        targetNameEl.style.fontSize = '24px';
+        // 画像読み込みエラー時のフォールバック用に onerror を登録する
+        targetImageEl.onerror = () => {
+            targetImageEl.style.display = 'none';
+            targetNameEl.style.fontSize = '40px';
+        };
+        targetImageEl.onload = () => {
+            targetImageEl.style.display = 'block';
+            targetNameEl.style.fontSize = '24px';
+        };
+        targetImageEl.src = `img/${encodeURIComponent(wordData.image)}?t=${new Date().getTime()}`;
     } else {
         targetImageEl.style.display = 'none';
+        targetImageEl.src = "";
         targetNameEl.style.fontSize = '40px';
     }
 
@@ -114,9 +122,8 @@ function showFeedback(isCorrect, tappedWordData, physicsBody) {
             Composite.remove(world, physicsBody);
             setTargetWord(tappedWordData);
 
-            // 新しい正解候補とダミーを少し降らせる
-            spawnNextHintCard(getLastKana(tappedWordData.reading));
-            fillCards(2);
+            // 新しい正解候補(必ず1つは含まれる)とダミーを少し降らせる
+            spawnNextHintCards(getLastKana(tappedWordData.reading), 5);
         } else {
             // 不正解のカードは上に弾き飛ばす
             Matter.Body.applyForce(physicsBody, physicsBody.position, {
@@ -250,18 +257,30 @@ function initPhysics() {
                 context.strokeStyle = word.is_trap ? '#ff4757' : '#60D394';
                 context.stroke();
 
-                // 画像がある場（現状は文字描画を優先、画像読み込みロジックは今後追加可）
-                // 今はダミーでテキスト表示
-                context.fillStyle = '#2D3142';
-                context.textAlign = 'center';
-                context.textBaseline = 'middle';
+                // 画像表示を優先、なければまたは読み込み失敗ならテキスト描画
+                if (word.image && word.imageLoaded && word.imgElement && word.imgElement.complete && word.imgElement.naturalWidth !== 0) {
+                    // クリップ用のパスを作成して画像を円形に切り抜く
+                    context.save();
+                    context.beginPath();
+                    context.arc(0, 0, size / 2 * 0.9, 0, 2 * Math.PI); // 少し小さめにクリップして枠線を残す
+                    context.clip();
+                    // 画像を描画 (中央配置)
+                    const imgSize = size * 0.9;
+                    context.drawImage(word.imgElement, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
+                    context.restore();
+                } else {
+                    // 画像がない or 読み込み中の場合はテキスト表示
+                    context.fillStyle = '#2D3142';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
 
-                let fontSize = size * 0.25;
-                if (word.name.length > 4) fontSize = size * 0.18;
-                if (word.name.length > 6) fontSize = size * 0.13;
+                    let fontSize = size * 0.25;
+                    if (word.name.length > 4) fontSize = size * 0.18;
+                    if (word.name.length > 6) fontSize = size * 0.13;
 
-                context.font = `900 ${fontSize}px 'Zen Maru Gothic', sans-serif`;
-                context.fillText(word.name, 0, 0);
+                    context.font = `900 ${fontSize}px 'Zen Maru Gothic', sans-serif`;
+                    context.fillText(word.name, 0, 0);
+                }
 
                 context.rotate(-angle);
                 context.translate(-x, -y);
@@ -271,8 +290,8 @@ function initPhysics() {
 }
 
 function spawnCard(x, y, data) {
-    // 画面サイズに応じてカードの大きさを調整
-    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.15;
+    // 画面サイズに応じてカードの大きさを調整 (以前は0.15)
+    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.08;
     const card = Bodies.circle(x, y, radius, {
         restitution: 0.6,
         friction: 0.1,
@@ -295,8 +314,8 @@ function fillCards(count) {
     }
 }
 
-function spawnNextHintCard(startingKana) {
-    // 次に正解となる候補を探す
+function spawnNextHintCards(startingKana, totalCount) {
+    // 次に正解となる候補を探す (ん で終わらない、かつ、ん のトラップも避ける)
     let hints = shiritoriData.filter(w => getFirstKana(w.reading) === startingKana && getLastKana(w.reading) !== 'ん');
 
     // もし手持ちのデータに続く言葉がない場合（行き止まり）
@@ -314,12 +333,15 @@ function spawnNextHintCard(startingKana) {
         hints = shiritoriData.filter(w => getFirstKana(w.reading) === getLastKana(newWord.reading) && getLastKana(w.reading) !== 'ん');
     }
 
-    // ヒントカードを降らせる
+    // 必ず1つは正解を混ぜる
     if (hints.length > 0) {
         const hintWord = hints[Math.floor(Math.random() * hints.length)];
         const x = window.innerWidth * 0.2 + Math.random() * window.innerWidth * 0.6;
         spawnCard(x, -200, hintWord);
     }
+
+    // 残りをランダムなダミーカードで埋める
+    fillCards(totalCount - 1);
 }
 
 function handleCardTap(body) {
@@ -345,6 +367,17 @@ async function loadDataAndStart() {
     try {
         const response = await fetch('data.json');
         shiritoriData = await response.json();
+
+        // 全ての単語に対して、画像イメージ要素を事前に生成しておく（シームレスな描画のため）
+        shiritoriData.forEach(word => {
+            if (word.image) {
+                const img = new Image();
+                img.onload = () => { word.imageLoaded = true; };
+                img.onerror = () => { word.imageLoaded = false; };
+                img.src = `img/${encodeURIComponent(word.image)}`;
+                word.imgElement = img; // 参照を持たせておく
+            }
+        });
     } catch (e) {
         console.error("データの読み込みに失敗しました", e);
         // フォールバックデータ
@@ -370,8 +403,7 @@ startBtn.addEventListener('click', () => {
         setTargetWord(initialWord || shiritoriData[0]);
 
         // 正解のカードを含めて初期カードを降らせる
-        spawnNextHintCard(getLastKana(initialWord.reading));
-        fillCards(6); // 最初は6個降らせる
+        spawnNextHintCards(getLastKana(initialWord.reading), 15); // 最初は15個降らせる
 
     }, 500);
 });

@@ -1,0 +1,17 @@
+# Logs
+*.log
+gen_log.txt
+output.log
+output2.log
+output3.log
+
+# Test files
+test_pollinations.png
+debug_images.py
+
+# Python
+__pycache__/
+*.pyc
+
+# Old images
+img_old/
