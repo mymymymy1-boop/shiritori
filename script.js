@@ -26,6 +26,12 @@ const targetKanaHintEl = document.getElementById('target-kana-hint');
 const scoreEl = document.getElementById('score-value');
 const startScreen = document.getElementById('start-screen');
 const startBtn = document.getElementById('start-btn');
+const loadingProgressEl = document.createElement('div');
+loadingProgressEl.id = 'loading-progress';
+loadingProgressEl.style.fontSize = '18px';
+loadingProgressEl.style.marginTop = '10px';
+loadingProgressEl.style.color = '#666';
+startBtn.parentNode.insertBefore(loadingProgressEl, startBtn.nextSibling);
 const feedbackOverlay = document.getElementById('feedback-overlay');
 const feedbackMark = document.getElementById('feedback-mark');
 const feedbackText = document.getElementById('feedback-text');
@@ -369,15 +375,40 @@ async function loadDataAndStart() {
         shiritoriData = await response.json();
 
         // 全ての単語に対して、画像イメージ要素を事前に生成しておく（シームレスな描画のため）
+        let loadedCount = 0;
+        const totalImages = shiritoriData.filter(w => w.image).length;
+        
+        startBtn.disabled = true;
+        startBtn.textContent = "よみこみ中...";
+        loadingProgressEl.textContent = `0 / ${totalImages}`;
+
         shiritoriData.forEach(word => {
             if (word.image) {
                 const img = new Image();
-                img.onload = () => { word.imageLoaded = true; };
-                img.onerror = () => { word.imageLoaded = false; };
+                img.onload = () => { 
+                    word.imageLoaded = true; 
+                    loadedCount++;
+                    updateProgress();
+                };
+                img.onerror = () => { 
+                    word.imageLoaded = false; 
+                    loadedCount++; // エラーでもカウントは進める
+                    updateProgress();
+                };
                 img.src = `img/${encodeURIComponent(word.image)}`;
                 word.imgElement = img; // 参照を持たせておく
             }
         });
+
+        function updateProgress() {
+            const percentage = Math.round((loadedCount / totalImages) * 100);
+            loadingProgressEl.textContent = `${loadedCount} / ${totalImages} (${percentage}%)`;
+            if (loadedCount >= totalImages) {
+                startBtn.disabled = false;
+                startBtn.textContent = "スタート！";
+                loadingProgressEl.style.display = 'none';
+            }
+        }
     } catch (e) {
         console.error("データの読み込みに失敗しました", e);
         // フォールバックデータ
